@@ -12,9 +12,15 @@ class UsersController extends Controller
     private $permissions;
     public function __construct() {}
     public function loginToken(){
-        if(Auth::check())
-            return response()->json(['msg' =>'login success','data'=>Auth::user(),'status'=>'success']);
-        return response()->json(['msg' =>'login failed','status'=>'fail']);
+        try{
+            if(Auth::check())
+                return response()->json(['msg' =>'login success','data'=>Auth::user(),'status'=>'success']);
+            return response()->json(['msg' =>'login failed','status'=>'fail']);
+        }
+        catch(Exception $e){
+            Log::error('Error in loginToken: '.$e->getMessage());
+            return response()->json(['msg'=>'Error in loginToken','status'=>'fail']);
+        }        
     }
     public function login(Request $request){
         if(Auth::attempt(['email'=>$request->input('email'),'password'=>$request->input('password')]))
@@ -29,11 +35,14 @@ class UsersController extends Controller
         $this->beginTransaction();
         try{
             $data= $this->dataRequest($request);
+            if(User::where('email',$data['email'])->exists())
+                return json_encode(['msg'=>'User already exists','status'=>'success',]);
             $data['password']=Hash::make($data['password']);
-            $data['api_token']=$this->randomString(100);
-            User::create($data);
+            $user = User::create($data);
+            $data['api_token']=$user->createToken($data['name'])->plainTextToken;
+            User::whereId($user['id'])->update(['api_token'=> $data['api_token']]);
             $this->commitTransaction();
-            return response()->json(['msg'=>'register success','status'=>'success']);
+            return response()->json(['token'=>$data['api_token'],'msg'=>'register success','status'=>'success']);
         }catch(\Exception $e){
             $this->rollbackTransaction();
             return response()->json(['msg'=>'register fails '.$e->getMessage()]);

@@ -6,11 +6,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
+use Laravel\Sanctum\HasApiTokens;
+enum StatusActive: string {
+        case ACTIVE = 'active';
+        case DEACTIVE = 'deactive';
+    };
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
-
+    use HasFactory, Notifiable,HasApiTokens;
+    
+    protected $casts = [
+        'status'=>StatusActive::class,
+    ];
     /**
      * The attributes that are mass assignable.
      *
@@ -20,8 +27,16 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone',
+        'address',
+        'password',
+        'status',
+        'api_token',
+        'permission',
+        'created_at',
+        'updated_at',
+        'deleted_at',
     ];
-
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -29,7 +44,9 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
-        'remember_token',
+        // 'api_token',
+        'status',
+        'permission'
     ];
 
     /**

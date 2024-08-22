@@ -20,8 +20,8 @@ class CreateUsersTable extends Migration
             $table->integer('phone')->nullable();
             $table->string('address')->nullable();    
             $table->string('password'); 
-            $table->string('status');      
-            $table->string('api_token'); 
+            $table->string('status')->default('1');      
+            $table->string('api_token')->nullable(); 
             $table->string('permission')->default('customer');
             $table->timestamps();
             $table->softDeletes();
